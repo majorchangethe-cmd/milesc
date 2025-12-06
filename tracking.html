@@ -5,121 +5,186 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Miles Logistics Tracker</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
     body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
-    .tracking-container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-    h1 { text-align: center; color: #2c3e50; }
-    .tracking-input { text-align: center; margin: 20px 0; }
-    .tracking-input input { padding: 12px; width: 300px; border: 1px solid #ddd; border-radius: 5px; }
-    .tracking-input button { padding: 12px 20px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .tracking-container { max-width: 960px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 0 25px rgba(0,0,0,0.15); }
+    h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
+    .tracking-input { text-align: center; margin: 25px 0; }
+    .tracking-input input { padding: 14px; width: 320px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+    .tracking-input button { padding: 14px 28px; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
     .tracking-input button:hover { background: #c0392b; }
-    .progress-container { display: flex; justify-content: space-between; margin: 30px 0; position: relative; }
-    .progress-container::before { content: ''; position: absolute; top: 20px; left: 0; right: 0; height: 4px; background: #ddd; z-index: 1; }
-    .progress-step { flex: 1; text-align: center; position: relative; z-index: 2; background: white; padding: 10px; }
-    .progress-step i { font-size: 24px; display: block; margin-bottom: 8px; }
+    .progress-container { display: flex; justify-content: space-between; margin: 40px 0; position: relative; }
+    .progress-container::before { content: ''; position: absolute; top: 24px; left: 10%; right: 10%; height: 4px; background: #ddd; z-index: 1; }
+    .progress-step { text-align: center; z-index: 2; }
+    .progress-step i { font-size: 28px; display: block; margin-bottom: 8px; }
+    .progress-step::before { content: ''; width: 50px; height: 50px; background: #ddd; border-radius: 50%; display: block; margin: 0 auto 10px; line-height: 50px; }
     .progress-step.active { color: #e74c3c; font-weight: bold; }
-    .progress-step::before { content: ''; width: 40px; height: 40px; background: #ddd; border-radius: 50%; display: block; margin: 0 auto 10px; line-height: 40px; }
-    .progress-step.active::before { background: #e74c3c; }
-    #map { height: 400px; margin-top: 20px; border: 2px solid #ddd; border-radius: 8px; }
-    .tracking-details, .tracking-info { background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0; }
-    .status-text { color: #e67e22; font-weight: bold; }
+    .progress-step.active::before { background: #e74c3c; color: white; }
+    .progress-step.active i { color: #e74c3c; }
+    #map { height: 480px; margin-top: 30px; border: 3px solid #ddd; border-radius: 12px; }
+    .tracking-details, .tracking-info { background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0; }
+    .status-text { color: #e67e22; font-weight: bold; font-size: 18px; }
+    .legend { text-align: center; margin: 15px 0; font-size: 14px; color: #555; }
 </style>
 </head>
 <body>
 
 <div class="tracking-container">
-    <h1>Miles Logistics - Package Tracker</h1>
-    <p>Enter your tracking number to receive real-time updates.</p>
-
+    <h1>Miles Logistics - International Tracker</h1>
     <div class="tracking-input">
         <input type="text" id="tracking-id" placeholder="Enter Tracking Number" />
-        <button onclick="trackOrder()">Track</button>
+        <button onclick="trackOrder()">Track Package</button>
     </div>
 
     <div class="tracking-status" id="tracking-status" style="display: none;">
         <h2>Tracking Details</h2>
         
         <div class="tracking-info">
-            <p><strong>Order ID:</strong> <span id="order-id"></span></p>
-            <p><strong>Status:</strong> <span id="order-status" class="status-text"></span></p>
-            <p><strong>Estimated Delivery:</strong> <span id="delivery-date"></span></p>
+            <p><strong>Tracking Number:</strong> <span id="order-id" style="font-family: monospace; font-size: 18px; color: #2c3e50;"></span></p>
+            <p><strong>Current Status:</strong> <span id="order-status" class="status-text"></span></p>
+            <p><strong>Estimated Delivery:</strong> <span id="delivery-date" style="font-weight: bold;"></span></p>
         </div>
 
         <div class="progress-container">
             <div class="progress-step" id="step-1">Order Placed</div>
-            <div class="progress-step" id="step-2">Shipped</div>
+            <div class="progress-step active" id="step-2">Shipped</div>
             <div class="progress-step active" id="step-3">On Hold (Customs)</div>
             <div class="progress-step" id="step-4">Out for Delivery</div>
             <div class="progress-step" id="step-5">Delivered</div>
         </div>
 
         <div class="tracking-details">
-            <h3>Package Information</h3>
+            <h3>Package & Recipient</h3>
             <p><strong>Recipient:</strong> <span id="recipient"></span></p>
-            <p><strong>Shipping Address:</strong> <span id="shipping-address"></span></p>
-            <p><strong>Courier Service:</strong> <span id="courier"></span></p>
-            <p><strong>Weight:</strong> <span id="weight">2.8kg</span></p>
-            <p><strong>Shipment Type:</strong> <span id="shipment-type">International Express</span></p>
+            <p><strong>Delivery Address:</strong> <span id="shipping-address"></span></p>
+            <p><strong>Courier:</strong> <span id="courier"></span> | <strong>Weight:</strong> 2.8kg | <strong>Type:</strong> International Express</p>
         </div>
 
+        <div class="legend">
+            Route: London → Dubai (Transit) → Sydney → Mount Gambier, South Australia
+        </div>
+
+        <!-- Interactive Map with Route -->
         <div id="map"></div>
     </div>
 </div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// Full shipment route coordinates
+const routePath = [
+    [51.5074, -0.1278],   // London Heathrow (LHR), UK
+    [25.2532, 55.3657],   // Dubai International (DXB), UAE (transit hub)
+    [-33.9461, 151.1772], // Sydney Kingsford Smith (SYD), Australia
+    [-37.8295, 140.7808]  // Final Destination: 41 A Lindsay St, Mount Gambier SA
+];
+
 const trackingDatabase = {
-    "EA147185623US": {
+    "ML5290AU1210": {
         status: "CONSIGNMENT ON HOLD FOR CUSTOMS CLEARANCE",
         deliveryDate: "10/12/2025",
         recipient: "Jasmine Samantha Edge Mackie",
         address: "41 A Lindsay Street, Mount Gambier, South Australia 5290",
         courier: "MILES LOGISTICS",
-        weight: "2.8kg",
-        type: "International Express",
         lat: -37.8295,
         lng: 140.7808
     }
 };
 
+let map, routeLine, destinationMarker;
+
 function trackOrder() {
-    let trackingId = document.getElementById('tracking-id').value.trim();
-    let details = trackingDatabase[trackingId];
+    const trackingId = document.getElementById('tracking-id').value.trim();
+    const details = trackingDatabase[trackingId];
 
-    if (details) {
-        document.getElementById('tracking-status').style.display = 'block';
-        document.getElementById('order-id').innerText = trackingId;
-        document.getElementById('order-status').innerText = details.status;
-        document.getElementById('delivery-date').innerText = details.deliveryDate;
-        document.getElementById('recipient').innerText = details.recipient;
-        document.getElementById('shipping-address').innerText = details.address;
-        document.getElementById('courier').innerText = details.courier;
-
-        document.querySelectorAll('.progress-step').forEach(step => step.classList.remove('active'));
-        document.getElementById('step-3').classList.add('active');
-
-        if (window.map) window.map.remove();
-
-        window.map = L.map('map').setView([details.lat, details.lng], 16);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(window.map);
-
-        L.marker([details.lat, details.lng]).addTo(window.map)
-            .bindPopup(`<b>${details.recipient}</b><br>${details.address}<br><br><strong>Status:</strong> ${details.status}<br><strong>Est. Delivery:</strong> ${details.deliveryDate}`)
-            .openPopup();
-
-    } else {
-        alert('Invalid Tracking ID! Please check and try again.');
+    if (!details) {
+        alert('Invalid Tracking ID! Try: ML5290AU1210');
+        return;
     }
+
+    // Show all info
+    document.getElementById('tracking-status').style.display = 'block';
+    document.getElementById('order-id').innerText = trackingId;
+    document.getElementById('order-status').innerText = details.status;
+    document.getElementById('delivery-date').innerText = details.deliveryDate;
+    document.getElementById('recipient').innerText = details.recipient;
+    document.getElementById('shipping-address').innerText = details.address;
+    document.getElementById('courier').innerText = details.courier;
+
+    // Progress bar
+    document.querySelectorAll('.progress-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step-1').classList.add('active');
+    document.getElementById('step-2').classList.add('active');
+    document.getElementById('step-3').classList.add('active');
+
+    // === MAP WITH FULL ROUTE ===
+    if (map) map.remove();
+
+    map = L.map('map').setView([-25, 125], 4); // Australia-centered view
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Draw the red route line (curved look with more points)
+    routeLine = L.polyline(routePath, {
+        color: '#e74c3c',
+        weight: 5,
+        opacity: 0.9,
+        dashArray: '15, 10',
+        dashOffset: '0'
+    }).addTo(map);
+
+    // Add animated dashed effect (optional cool touch)
+    let dashOffset = 0;
+    setInterval(() => {
+        dashOffset -= 2;
+        routeLine.setStyle({ dashOffset: dashOffset });
+    }, 50);
+
+    // Markers along the route
+    const icons = {
+        start: L.divIcon({className: 'map-icon', html: 'Start', iconSize: [100, 40]}),
+        transit: L.divIcon({className: 'map-icon', html: 'Transit', iconSize: [80, 30]}),
+        current: L.divIcon({className: 'map-icon', html: 'Held at Customs', iconSize: [140, 40]}),
+        dest: L.icon({iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize: [40, 40]})
+    };
+
+    L.marker(routePath[0], {icon: L.divIcon({html: 'London (Origin)', className: 'map-label'})}).addTo(map)
+        .bindPopup("<b>Origin</b><br>London Heathrow, UK");
+    L.marker(routePath[1], {icon: L.divIcon({html: 'Dubai (Transit)', className: 'map-label'})}).addTo(map)
+        .bindPopup("<b>Transit Hub</b><br>Dubai International Airport");
+    L.marker(routePath[2], {icon: L.divIcon({html: 'Sydney (Entry)', className: 'map-label'})}).addTo(map)
+        .bindPopup("<b>Australia Entry</b><br>Sydney Airport");
+
+    // Final destination with big red pin
+    destinationMarker = L.marker([details.lat, details.lng], {
+        icon: L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41]
+        })
+    }).addTo(map)
+    .bindPopup(`
+        <b style="font-size:16px;">${details.recipient}</b><br>
+        ${details.address}<br><br>
+        <strong>Status:</strong> ${details.status}<br>
+        <strong>Est. Delivery:</strong> ${details.deliveryDate}
+    `)
+    .openPopup();
+
+    // Fit map to show entire route + zoom in a bit on Australia
+    map.fitBounds(routeLine.getBounds().pad(0.3));
 }
 
-// Auto-load the tracking result as soon as the page opens
+// Auto-load instantly when page opens
 window.onload = function() {
     document.getElementById('tracking-id').value = "ML5290AU1210";
     trackOrder();
 };
 </script>
+
 </body>
 </html>
