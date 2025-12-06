@@ -6,104 +6,132 @@
 <title>Miles Logistics Tracker</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<link rel="stylesheet" href="css/tracking.css" />
+<style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+    .tracking-container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #2c3e50; }
+    .tracking-input { text-align: center; margin: 20px 0; }
+    .tracking-input input { padding: 12px; width: 300px; border: 1px solid #ddd; border-radius: 5px; }
+    .tracking-input button { padding: 12px 20px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .tracking-input button:hover { background: #c0392b; }
+    .progress-container { display: flex; justify-content: space-between; margin: 30px 0; position: relative; }
+    .progress-container::before { content: ''; position: absolute; top: 20px; left: 0; right: 0; height: 4px; background: #ddd; z-index: 1; }
+    .progress-step { flex: 1; text-align: center; position: relative; z-index: 2; background: white; padding: 10px; }
+    .progress-step i { font-size: 24px; display: block; margin-bottom: 8px; }
+    .progress-step.active { color: #e74c3c; font-weight: bold; }
+    .progress-step.active::before { background: #e74c3c; }
+    .progress-step::before { content: ''; width: 40px; height: 40px; background: #ddd; border-radius: 50%; display: block; margin: 0 auto 10px; line-height: 40px; }
+    .progress-step.active::before { background: #e74c3c; color: white; }
+    #map { height: 400px; margin-top: 20px; border: 2px solid #ddd; border-radius: 8px; }
+    .tracking-details, .tracking-info { background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0; }
+    .status-text { color: #e67e22; font-weight: bold; }
+</style>
 </head>
 <body>
+
 <div class="tracking-container">
-<h1><i class="fas fa-map-marker-alt"></i> Package Tracker</h1>
-<p>Enter your tracking number to receive real-time updates.</p>
+    <h1><i class="fas fa-map-marker-alt"></i> Miles Logistics - Package Tracker</h1>
+    <p>Enter your tracking number to receive real-time updates.</p>
 
-<div class="tracking-input">
-<input type="text" id="tracking-id" placeholder="Enter Tracking Number" />
-<button onclick="trackOrder()"><i class="fas fa-search"></i> Track</button>
-</div>
+    <div class="tracking-input">
+        <input type="text" id="tracking-id" placeholder="Enter Tracking Number" />
+        <button onclick="trackOrder()"><i class="fas fa-search"></i> Track</button>
+    </div>
 
-<div class="tracking-status" id="tracking-status" style="display: none;">
-<h2><i class="fas fa-box"></i> Tracking Details</h2>
+    <div class="tracking-status" id="tracking-status" style="display: none;">
+        <h2><i class="fas fa-box"></i> Tracking Details</h2>
+        
+        <div class="tracking-info">
+            <p><strong>Order ID:</strong> <span id="order-id"></span></p>
+            <p><strong>Status:</strong> <span id="order-status" class="status-text"></span></p>
+            <p><strong>Estimated Delivery:</strong> <span id="delivery-date"></span></p>
+        </div>
 
-<div class="tracking-info">
-<p><strong>Order ID:</strong> <span id="order-id"></span></p>
-<p><strong>Status:</strong> <span id="order-status" class="status-text">Order Placed</span></p>
-<p><strong>Estimated Delivery:</strong> <span id="delivery-date">29/11/2025</span></p>
-</div>
+        <!-- Progress Tracker -->
+        <div class="progress-container">
+            <div class="progress-step" id="step-1"><i class="fas fa-box"></i> Order Placed</div>
+            <div class="progress-step" id="step-2"><i class="fas fa-shipping-fast"></i> Shipped</div>
+            <div class="progress-step active" id="step-3"><i class="fas fa-plane"></i> On Hold (Customs)</div>
+            <div class="progress-step" id="step-4"><i class="fas fa-truck"></i> Out for Delivery</div>
+            <div class="progress-step" id="step-5"><i class="fas fa-check-circle"></i> Delivered</div>
+        </div>
 
-<!-- Updated Progress Tracker -->
-<div class="progress-container">
-    <div class="progress-step" id="step-1"><i class="fas fa-box"></i> Order Placed</div>
-    <div class="progress-step" id="step-2"><i class="fas fa-shipping-fast"></i> Shipped</div>
-    <div class="progress-step active" id="step-3"><i class="fas fa-plane"></i> On Hold (Airport)</div>
-    <div class="progress-step" id="step-4"><i class="fas fa-truck"></i> Out for Delivery</div>
-    <div class="progress-step" id="step-5"><i class="fas fa-check-circle"></i> Delivered</div>
-</div>
+        <div class="tracking-details">
+            <h3>Package Information</h3>
+            <p><strong>Recipient:</strong> <span id="recipient"></span></p>
+            <p><strong>Shipping Address:</strong> <span id="shipping-address"></span></p>
+            <p><strong>Courier Service:</strong> <span id="courier"></span></p>
+            <p><strong>Weight:</strong> <span id="weight">2.8kg</span></p>
+            <p><strong>Shipment Type:</strong> <span id="shipment-type">International Express</span></p>
+        </div>
 
-<div class="tracking-details">
-<h3>Package Information</h3>
-<p><strong>Recipient:</strong> <span id="recipient">VELMA EMERY</span></p>
-<p><strong>Shipping Address:</strong> <span id="shipping-address">13070 SE 36th Ave, Belleview FL 34420, United States</span></p>
-<p><strong>Courier Service:</strong> <span id="courier">MILES LOGISTICS</span></p>
-<p><strong>Weight:</strong> <span id="weight">5kg</span></p>
-<p><strong>Shipment Type:</strong> <span id="shipment-type">Priority</span></p>
-</div>
-
-<!-- Live Tracking Map -->
-<div id="map" style="height: 400px;"></div>
-</div>
+        <!-- Live Tracking Map -->
+        <div id="map"></div>
+    </div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
 const trackingDatabase = {
-    "EA147185623US": {
-        status: "CONSIGNMENT ON HOLD at Sofia International Airport BULGARIA FOR AIRPORT CLEARANCES",
-        deliveryDate: "29/11/2025",
-        location: "Sofia International Airport, Bulgaria",
-        recipient: "VELMA EMERY",
-        address: "13070 SE 36th Ave, Belleview FL 34420, United States",
+    "ML5290AU1210": {  // You can change this tracking number to whatever you want
+        status: "CONSIGNMENT ON HOLD FOR CUSTOMS CLEARANCE",
+        deliveryDate: "10/12/2025",
+        recipient: "Jasmine Samantha Edge Mackie",
+        address: "41 A Lindsay Street, Mount Gambier, South Australia 5290",
         courier: "MILES LOGISTICS",
-        weight: "5kg",
-        type: "Priority"
+        weight: "2.8kg",
+        type: "International Express",
+        // Coordinates for 41 Lindsay Street, Mount Gambier SA 5290, Australia
+        lat: -37.8295,
+        lng: 140.7808
     }
 };
 
 function trackOrder() {
     let trackingId = document.getElementById('tracking-id').value.trim();
-    
-    if (trackingDatabase[trackingId]) {
-        let details = trackingDatabase[trackingId];
+    let details = trackingDatabase[trackingId];
 
+    if (details) {
         document.getElementById('tracking-status').style.display = 'block';
-
         document.getElementById('order-id').innerText = trackingId;
         document.getElementById('order-status').innerText = details.status;
         document.getElementById('delivery-date').innerText = details.deliveryDate;
         document.getElementById('recipient').innerText = details.recipient;
         document.getElementById('shipping-address').innerText = details.address;
         document.getElementById('courier').innerText = details.courier;
-        document.getElementById('weight').innerText = details.weight;
-        document.getElementById('shipment-type').innerText = details.type;
 
-        // Reset progress steps
+        // Keep "On Hold (Customs)" step active
         document.querySelectorAll('.progress-step').forEach(step => step.classList.remove('active'));
-
-        // Set "On Hold" as active
         document.getElementById('step-3').classList.add('active');
 
-        // Sofia Airport Coordinates
-        let map = L.map('map').setView([42.6886, 23.4142], 13);
+        // Initialize or update map
+        if (window.map) window.map.remove(); // Clear previous map
+
+        window.map = L.map('map').setView([details.lat, details.lng], 16);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        }).addTo(window.map);
 
-        L.marker([42.6886, 23.4142]).addTo(map)
-            .bindPopup(`<b>${details.recipient}</b><br>${details.address}<br>Status: ${details.status}`)
+        L.marker([details.lat, details.lng]).addTo(window.map)
+            .bindPopup(`
+                <b>${details.recipient}</b><br>
+                ${details.address}<br><br>
+                <strong>Status:</strong> ${details.status}<br>
+                <strong>Est. Delivery:</strong> ${details.deliveryDate}
+            `)
             .openPopup();
+
+        // Fit map nicely around the marker
+        window.map.fitBounds([[details.lat - 0.005, details.lng - 0.005], [details.lat + 0.005, details.lng + 0.005]]);
 
     } else {
         alert('Invalid Tracking ID! Please check and try again.');
     }
 }
+
+// Optional: auto-fill for testing
+document.getElementById('tracking-id').value = "ML5290AU1210";
 </script>
 
 </body>
