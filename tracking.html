@@ -16,18 +16,61 @@
     .tracking-input button {padding:15px 30px; background:#e74c3c; color:white; border:none; border-radius:10px; font-size:17px; cursor:pointer;}
     .tracking-input button:hover {background:#c0392b;}
 
-    /* Progress Steps - Fixed Icons */
-    .progress-container {display:flex; justify-content:space-between; margin:40px 0; position:relative;}
-    .progress-container::before {content:''; position:absolute; top:30px; left:10%; right:10%; height:6px; background:#e0e0e0; z-index:1;}
-    .progress-step {flex:1; text-align:center; z-index:2;}
-    .progress-step i {font-size:26px; color:#fff; position:relative; z-index:3;}
-    .progress-step span {display:block; margin-top:12px; font-weight:600; font-size:15px; color:#555;}
-    .progress-step::before {
-        content:''; width:66px; height:66px; border-radius:50%; background:#ccc; display:block;
-        margin:0 auto 12px; line-height:66px; transition:all 0.4s; border:4px solid #f0f0f0;
+    /* PERFECTLY FIXED PROGRESS CIRCLES WITH VISIBLE WHITE ICONS */
+    .progress-container {
+        display: flex;
+        justify-content: space-between;
+        margin: 50px 0;
+        position: relative;
     }
-    .progress-step.active::before {background:#e74c3c; box-shadow:0 0 20px rgba(231,76,60,0.6);}
-    .progress-step.active span {color:#e74c3c;}
+    .progress-container::before {
+        content: '';
+        position: absolute;
+        top: 35px;
+        left: 10%;
+        right: 10%;
+        height: 6px;
+        background: #e0e0e0;
+        z-index: 1;
+    }
+    .progress-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+    }
+    .progress-step .circle {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: #ccc;
+        margin: 0 auto 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.4s;
+        border: 4px solid #f0f0f0;
+    }
+    .progress-step.active .circle {
+        background: #e74c3c;
+        box-shadow: 0 0 20px rgba(231,76,60,0.7);
+    }
+    .progress-step i {
+        font-size: 28px;
+        color: white;               /* Always white */
+        z-index: 3;
+    }
+    .progress-step span {
+        display: block;
+        margin-top: 8px;
+        font-weight: 600;
+        font-size: 15px;
+        color: #555;
+    }
+    .progress-step.active span {
+        color: #e74c3c;
+        font-weight: bold;
+    }
 
     #map {height:520px; margin-top:30px; border:3px solid #ddd; border-radius:15px;}
     .tracking-info, .tracking-details {background:#f8f9fa; padding:22px; border-radius:12px; margin:18px 0;}
@@ -37,16 +80,15 @@
 <body>
 
 <div class="tracking-container">
-    <h1><i class="fas fa-truck"></i> Miles Logistics - Package Tracker</h1>
-    <p style="text-align:center; color:#666;">Enter your tracking number below</p>
+    <h1>Miles Logistics - Package Tracker</h1>
 
     <div class="tracking-input">
-        <input type="text" id="tracking-id" placeholder="e.g. EA147185623US" />
+        <input type="text" id="tracking-id" placeholder="Enter tracking number" />
         <button onclick="trackOrder()">Track Package</button>
     </div>
 
     <div class="tracking-status" id="tracking-status" style="display:none;">
-        <h2 style="text-align:center; color:#2c3e50;"><i class="fas fa-box-open"></i> Tracking Details</h2>
+        <h2 style="text-align:center; color:#2c3e50;">Tracking Details</h2>
 
         <div class="tracking-info">
             <p><strong>Tracking Number:</strong> <span id="order-id" style="font-family:monospace; font-size:22px; color:#e74c3c;"></span></p>
@@ -54,30 +96,35 @@
             <p><strong>Estimated Delivery:</strong> <span id="delivery-date" style="font-weight:bold; color:#27ae60;"></span></p>
         </div>
 
-        <!-- Progress Bar with Visible Icons -->
+        <!-- FIXED: Icons now perfectly visible -->
         <div class="progress-container">
             <div class="progress-step active" id="step-1">
-                <i class="fas fa-box"></i><span>Order Placed</span>
+                <div class="circle"><i class="fas fa-box"></i></div>
+                <span>Order Placed</span>
             </div>
             <div class="progress-step active" id="step-2">
-                <i class="fas fa-shipping-fast"></i><span>Shipped</span>
+                <div class="circle"><i class="fas fa-shipping-fast"></i></div>
+                <span>Shipped</span>
             </div>
             <div class="progress-step active" id="step-3">
-                <i class="fas fa-plane"></i><span>On Hold (Customs)</span>
+                <div class="circle"><i class="fas fa-plane"></i></div>
+                <span>On Hold (Customs)</span>
             </div>
             <div class="progress-step" id="step-4">
-                <i class="fas fa-truck"></i><span>Out for Delivery</span>
+                <div class="circle"><i class="fas fa-truck"></i></div>
+                <span>Out for Delivery</span>
             </div>
-            <div class="progress-Zstep" id="step-5">
-                <i class="fas fa-check-circle"></i><span>Delivered</span>
+            <div class="progress-step" id="step-5">
+                <div class="circle"><i class="fas fa-check-circle"></i></div>
+                <span>Delivered</span>
             </div>
         </div>
 
         <div class="tracking-details">
-            <h3><i class="fas fa-user"></i> Recipient Information</h3>
+            <h3>Recipient Information</h3>
             <p><strong>Recipient:</strong> <span id="recipient"></span></p>
             <p><strong>Delivery Address:</strong> <span id="shipping-address"></span></p>
-            <p><strong>Courier:</strong> MILES LOGISTICS | <strong>Weight:</strong> 2.8kg | <strong>Type:</strong> International Priority</p>
+            <p><strong>Courier:</strong> MILES LOGISTICS | Weight: 2.8kg | Type: International Priority</p>
         </div>
 
         <div style="text-align:center; margin:20px 0; padding:12px; background:#fff3cd; border-radius:10px; color:#856404;">
@@ -90,12 +137,11 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// Full international route
 const routePath = [
-    [51.5074, -0.1278],    // London, UK
-    [25.2532, 55.3657],    // Dubai, UAE
-    [-33.9461, 151.1772],  // Sydney, Australia
-    [-37.8295, 140.7808]   // Mount Gambier, SA
+    [51.5074, -0.1278],   // London
+    [25.2532, 55.3657],   // Dubai
+    [-33.9461, 151.1772], // Sydney
+    [-37.8295, 140.7808]  // Mount Gambier
 ];
 
 const trackingDatabase = {
@@ -127,37 +173,31 @@ function trackOrder() {
     document.getElementById('recipient').innerText = d.recipient;
     document.getElementById('shipping-address').innerText = d.address;
 
-    // Reset and activate steps
+    // Activate correct steps
     document.querySelectorAll('.progress-step').forEach(s => s.classList.remove('active'));
-    document.getElementById('step-1').classList.add('active');
-    document.getElementById('step-2').classList.add('active');
-    document.getElementById('step-3').classList.add('active');
+    for (let i = 1; i <= 3; i++) {
+        document.getElementById('step-' + i).classList.add('active');
+    }
 
-    // === MAP WITH ANIMATED ROUTE ===
+    // Map with animated route
     if (map) map.remove();
     map = L.map('map').setView([-28, 135], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    // Animated dashed red route
     routeLine = L.polyline(routePath, {
         color: '#e74c3c', weight: 6, opacity: 0.9, dashArray: '20,15'
     }).addTo(map);
 
-    let dashOffset = 0;
+    let offset = 0;
     setInterval(() => {
-        dashOffset -= 2;
-        routeLine.setStyle({ dashOffset: dashOffset });
+        offset -= 2;
+        routeLine.setStyle({ dashOffset: offset });
     }, 60);
 
     // Markers
-    L.marker(routePath[0]).addTo(map).bindPopup("<b>Origin:</b> London, UK");
-    L.marker(routePath[1]).addTo(map).bindPopup("<b>Transit:</b> Dubai International");
-    L.marker(routePath[2]).addTo(map).bindPopup("<b>Entry Point:</b> Sydney, Australia");
-
-    // Final destination - big red pin
+    L.marker(routePath[0]).addTo(map).bindPopup("Origin: London, UK");
+    L.marker(routePath[1]).addTo(map).bindPopup("Transit: Dubai");
+    L.marker(routePath[2]).addTo(map).bindPopup("Entry: Sydney");
     L.marker([d.lat, d.lng], {
         icon: L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
@@ -165,13 +205,13 @@ function trackOrder() {
             iconSize: [25,41], iconAnchor: [12,41]
         })
     }).addTo(map)
-      .bindPopup(`<b style="font-size:16px;">${d.recipient}</b><br>${d.address}<br><br><strong>Status:</strong> ${d.status}<br><strong>Delivery:</strong> ${d.deliveryDate}`)
+      .bindPopup(`<b>${d.recipient}</b><br>${d.address}<br><br><strong>Status:</strong> ${d.status}`)
       .openPopup();
 
     map.fitBounds(routeLine.getBounds().pad(0.4));
 }
 
-// Auto-load with your tracking number
+// Auto-load instantly
 window.onload = function() {
     document.getElementById('tracking-id').value = "EA147185623US";
     trackOrder();
