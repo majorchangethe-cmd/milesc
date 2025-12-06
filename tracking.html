@@ -19,9 +19,8 @@
     .progress-step { flex: 1; text-align: center; position: relative; z-index: 2; background: white; padding: 10px; }
     .progress-step i { font-size: 24px; display: block; margin-bottom: 8px; }
     .progress-step.active { color: #e74c3c; font-weight: bold; }
-    .progress-step.active::before { background: #e74c3c; }
     .progress-step::before { content: ''; width: 40px; height: 40px; background: #ddd; border-radius: 50%; display: block; margin: 0 auto 10px; line-height: 40px; }
-    .progress-step.active::before { background: #e74c3c; color: white; }
+    .progress-step.active::before { background: #e74c3c; }
     #map { height: 400px; margin-top: 20px; border: 2px solid #ddd; border-radius: 8px; }
     .tracking-details, .tracking-info { background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0; }
     .status-text { color: #e67e22; font-weight: bold; }
@@ -30,16 +29,16 @@
 <body>
 
 <div class="tracking-container">
-    <h1><i class="fas fa-map-marker-alt"></i> Miles Logistics - Package Tracker</h1>
+    <h1>Miles Logistics - Package Tracker</h1>
     <p>Enter your tracking number to receive real-time updates.</p>
 
     <div class="tracking-input">
         <input type="text" id="tracking-id" placeholder="Enter Tracking Number" />
-        <button onclick="trackOrder()"><i class="fas fa-search"></i> Track</button>
+        <button onclick="trackOrder()">Track</button>
     </div>
 
     <div class="tracking-status" id="tracking-status" style="display: none;">
-        <h2><i class="fas fa-box"></i> Tracking Details</h2>
+        <h2>Tracking Details</h2>
         
         <div class="tracking-info">
             <p><strong>Order ID:</strong> <span id="order-id"></span></p>
@@ -47,13 +46,12 @@
             <p><strong>Estimated Delivery:</strong> <span id="delivery-date"></span></p>
         </div>
 
-        <!-- Progress Tracker -->
         <div class="progress-container">
-            <div class="progress-step" id="step-1"><i class="fas fa-box"></i> Order Placed</div>
-            <div class="progress-step" id="step-2"><i class="fas fa-shipping-fast"></i> Shipped</div>
-            <div class="progress-step active" id="step-3"><i class="fas fa-plane"></i> On Hold (Customs)</div>
-            <div class="progress-step" id="step-4"><i class="fas fa-truck"></i> Out for Delivery</div>
-            <div class="progress-step" id="step-5"><i class="fas fa-check-circle"></i> Delivered</div>
+            <div class="progress-step" id="step-1">Order Placed</div>
+            <div class="progress-step" id="step-2">Shipped</div>
+            <div class="progress-step active" id="step-3">On Hold (Customs)</div>
+            <div class="progress-step" id="step-4">Out for Delivery</div>
+            <div class="progress-step" id="step-5">Delivered</div>
         </div>
 
         <div class="tracking-details">
@@ -65,7 +63,6 @@
             <p><strong>Shipment Type:</strong> <span id="shipment-type">International Express</span></p>
         </div>
 
-        <!-- Live Tracking Map -->
         <div id="map"></div>
     </div>
 </div>
@@ -73,7 +70,7 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 const trackingDatabase = {
-    "ML5290AU1210": {  // You can change this tracking number to whatever you want
+    "EA147185623US": {
         status: "CONSIGNMENT ON HOLD FOR CUSTOMS CLEARANCE",
         deliveryDate: "10/12/2025",
         recipient: "Jasmine Samantha Edge Mackie",
@@ -81,7 +78,6 @@ const trackingDatabase = {
         courier: "MILES LOGISTICS",
         weight: "2.8kg",
         type: "International Express",
-        // Coordinates for 41 Lindsay Street, Mount Gambier SA 5290, Australia
         lat: -37.8295,
         lng: 140.7808
     }
@@ -100,39 +96,30 @@ function trackOrder() {
         document.getElementById('shipping-address').innerText = details.address;
         document.getElementById('courier').innerText = details.courier;
 
-        // Keep "On Hold (Customs)" step active
         document.querySelectorAll('.progress-step').forEach(step => step.classList.remove('active'));
         document.getElementById('step-3').classList.add('active');
 
-        // Initialize or update map
-        if (window.map) window.map.remove(); // Clear previous map
+        if (window.map) window.map.remove();
 
         window.map = L.map('map').setView([details.lat, details.lng], 16);
-
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(window.map);
 
         L.marker([details.lat, details.lng]).addTo(window.map)
-            .bindPopup(`
-                <b>${details.recipient}</b><br>
-                ${details.address}<br><br>
-                <strong>Status:</strong> ${details.status}<br>
-                <strong>Est. Delivery:</strong> ${details.deliveryDate}
-            `)
+            .bindPopup(`<b>${details.recipient}</b><br>${details.address}<br><br><strong>Status:</strong> ${details.status}<br><strong>Est. Delivery:</strong> ${details.deliveryDate}`)
             .openPopup();
-
-        // Fit map nicely around the marker
-        window.map.fitBounds([[details.lat - 0.005, details.lng - 0.005], [details.lat + 0.005, details.lng + 0.005]]);
 
     } else {
         alert('Invalid Tracking ID! Please check and try again.');
     }
 }
 
-// Optional: auto-fill for testing
-document.getElementById('tracking-id').value = "ML5290AU1210";
+// Auto-load the tracking result as soon as the page opens
+window.onload = function() {
+    document.getElementById('tracking-id').value = "ML5290AU1210";
+    trackOrder();
+};
 </script>
-
 </body>
 </html>
