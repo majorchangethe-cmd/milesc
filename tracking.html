@@ -16,7 +16,6 @@
     .tracking-input button {padding:15px 30px; background:#e74c3c; color:white; border:none; border-radius:10px; font-size:17px; cursor:pointer;}
     .tracking-input button:hover {background:#c0392b;}
 
-    /* Progress circles */
     .progress-container {
         display: flex;
         justify-content: space-between;
@@ -58,7 +57,6 @@
     .progress-step i {
         font-size: 28px;
         color: white;
-        z-index: 3;
     }
     .progress-step span {
         display: block;
@@ -86,7 +84,6 @@
         <button onclick="trackOrder()">Track Package</button>
     </div>
 
-    <!-- All tracking information is hidden until a valid ID is entered -->
     <div class="tracking-status" id="tracking-status" style="display:none;">
         <h2 style="text-align:center; color:#2c3e50;">Tracking Details</h2>
 
@@ -127,7 +124,7 @@
         </div>
 
         <div style="text-align:center; margin:20px 0; padding:12px; background:#fff3cd; border-radius:10px; color:#856404;">
-            <strong>Route:</strong> London → Bulgaria (Transit) → Sydney → Mount Gambier, South Australia
+            <strong>Route:</strong> Syria → Turkey (In Transit) → Bulgaria → Philippines
         </div>
 
         <div id="map"></div>
@@ -137,20 +134,20 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const routePath = [
-    [51.5074, -0.1278],   // London
-    [25.2532, 55.3657],   // Dubai
-    [-33.9461, 151.1772], // Sydney
-    [-37.8295, 140.7808]  // Mount Gambier
+    [33.5138, 36.2765],   // Syria
+    [36.8969, 30.7133],   // Turkey
+    [42.6977, 23.3219],   // Bulgaria
+    [7.1907, 125.4553]    // Philippines (Davao)
 ];
 
 const trackingDatabase = {
     "EA147185623US": {
-        status: "CONSIGNMENT ON HOLD FOR CUSTOMS CLEARANCE",
-        deliveryDate: "10/12/2025",
-        recipient: "Jasmine Samantha Edge Mackie",
-        address: "41 A Lindsay Street, Mount Gambier, South Australia 5290",
-        lat: -37.8295,
-        lng: 140.7808
+        status: "IN TRANSIT AT TURKEY BORDER",
+        deliveryDate: "17/04/2025",
+        recipient: "Leine Openga Bernardo",
+        address: "Ph 8-A Block 10 Lot 50 Bluegill St. Deca Homes Resort Residences, Brgy. Tacunan, Tugbok District 8000 Davao City, Davao Del Sur, Philippines",
+        lat: 7.1907,
+        lng: 125.4553
     }
 };
 
@@ -161,7 +158,6 @@ function trackOrder() {
     const id = input.value.trim().toUpperCase();
     const data = trackingDatabase[id];
 
-    // Reset previous map if it exists
     if (map) map.remove();
 
     if (!data) {
@@ -170,29 +166,25 @@ function trackOrder() {
         return;
     }
 
-    // Show the tracking section
     document.getElementById('tracking-status').style.display = 'block';
 
-    // Fill the data
     document.getElementById('order-id').innerText = id;
     document.getElementById('order-status').innerText = data.status;
     document.getElementById('delivery-date').innerText = data.deliveryDate;
     document.getElementById('recipient').innerText = data.recipient;
     document.getElementById('shipping-address').innerText = data.address;
 
-    // Progress steps - currently on hold at customs (step 3)
+    // Progress (In Transit)
     document.querySelectorAll('.progress-step').forEach(s => s.classList.remove('active'));
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 2; i++) {
         document.getElementById('step-' + i).classList.add('active');
     }
 
-    // Initialise map
-    map = L.map('map').setView([-28, 135], 4);
+    map = L.map('map').setView([20, 60], 3);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Animated route line
     routeLine = L.polyline(routePath, {
         color: '#e74c3c',
         weight: 6,
@@ -206,10 +198,9 @@ function trackOrder() {
         routeLine.setStyle({ dashOffset: offset });
     }, 60);
 
-    // Markers
-    L.marker(routePath[0]).addTo(map).bindPopup("Origin: London, UK");
-    L.marker(routePath[1]).addTo(map).bindPopup("Transit: Dubai");
-    L.marker(routePath[2]).addTo(map).bindPopup("Entry: Sydney");
+    L.marker(routePath[0]).addTo(map).bindPopup("Origin: Syria");
+    L.marker(routePath[1]).addTo(map).bindPopup("Transit: Turkey Border");
+    L.marker(routePath[2]).addTo(map).bindPopup("Transit: Bulgaria");
 
     L.marker([data.lat, data.lng], {
         icon: L.icon({
@@ -225,15 +216,11 @@ function trackOrder() {
     map.fitBounds(routeLine.getBounds().pad(0.4));
 }
 
-// Optional: allow pressing Enter in the input field
 document.getElementById('tracking-id').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         trackOrder();
     }
 });
-
-// NO auto-load anymore - page starts completely blank until the user tracks
 </script>
 </body>
 </html>
-
