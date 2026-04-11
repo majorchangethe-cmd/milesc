@@ -4,148 +4,153 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Miles Logistics Tracker</title>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 <style>
-    body {font-family: Arial, sans-serif; background:#f4f4f9; margin:0; padding:20px;}
-    .tracking-container {max-width:960px; margin:30px auto; background:#fff; padding:35px; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.15);}
-    h1 {text-align:center; color:#2c3e50; margin-bottom:8px;}
-    h1 i {color:#e74c3c;}
-    .tracking-input {text-align:center; margin:25px 0;}
-    .tracking-input input {padding:15px; width:340px; border:2px solid #ddd; border-radius:10px; font-size:17px;}
-    .tracking-input button {padding:15px 30px; background:#e74c3c; color:white; border:none; border-radius:10px; font-size:17px; cursor:pointer;}
-    .tracking-input button:hover {background:#c0392b;}
+body {font-family: Arial, sans-serif; background:#f4f4f9; margin:0; padding:20px;}
+.tracking-container {max-width:960px; margin:30px auto; background:#fff; padding:35px; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.15);}
+h1 {text-align:center; color:#2c3e50;}
+h1 i {color:#e74c3c;}
 
-    .progress-container {
-        display: flex;
-        justify-content: space-between;
-        margin: 50px 0;
-        position: relative;
-    }
-    .progress-container::before {
-        content: '';
-        position: absolute;
-        top: 35px;
-        left: 10%;
-        right: 10%;
-        height: 6px;
-        background: #e0e0e0;
-        z-index: 1;
-    }
-    .progress-step {
-        flex: 1;
-        text-align: center;
-        position: relative;
-        z-index: 2;
-    }
-    .progress-step .circle {
-        width: 70px;
-        height: 70px;
-        border-radius: 50%;
-        background: #ccc;
-        margin: 0 auto 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.4s;
-        border: 4px solid #f0f0f0;
-    }
-    .progress-step.active .circle {
-        background: #e74c3c;
-        box-shadow: 0 0 20px rgba(231,76,60,0.7);
-    }
-    .progress-step i {
-        font-size: 28px;
-        color: white;
-    }
-    .progress-step span {
-        display: block;
-        margin-top: 8px;
-        font-weight: 600;
-        font-size: 15px;
-        color: #555;
-    }
-    .progress-step.active span {
-        color: #e74c3c;
-        font-weight: bold;
-    }
+.tracking-input {text-align:center; margin:25px 0;}
+.tracking-input input {padding:15px; width:340px; border:2px solid #ddd; border-radius:10px; font-size:17px;}
+.tracking-input button {padding:15px 30px; background:#e74c3c; color:white; border:none; border-radius:10px; font-size:17px; cursor:pointer;}
+.tracking-input button:hover {background:#c0392b;}
 
-    #map {height:520px; margin-top:30px; border:3px solid #ddd; border-radius:15px;}
-    .tracking-info, .tracking-details {background:#f8f9fa; padding:22px; border-radius:12px; margin:18px 0;}
-    .status-text {color:#e67e22; font-weight:bold; font-size:19px;}
+.progress-container {
+    display:flex;
+    justify-content:space-between;
+    margin:50px 0;
+    position:relative;
+}
+.progress-container::before {
+    content:'';
+    position:absolute;
+    top:35px;
+    left:10%;
+    right:10%;
+    height:6px;
+    background:#e0e0e0;
+    z-index:1;
+}
+.progress-step {
+    flex:1;
+    text-align:center;
+    position:relative;
+    z-index:2;
+}
+.progress-step .circle {
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    background:#ccc;
+    margin:0 auto 12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:all 0.4s;
+    border:4px solid #f0f0f0;
+}
+.progress-step.active .circle {
+    background:#e74c3c;
+    box-shadow:0 0 20px rgba(231,76,60,0.7);
+}
+.progress-step i {font-size:28px; color:white;}
+.progress-step span {display:block; margin-top:8px; font-weight:600; color:#555;}
+.progress-step.active span {color:#e74c3c;}
+
+#map {height:520px; margin-top:30px; border:3px solid #ddd; border-radius:15px;}
+
+.tracking-info, .tracking-details {
+    background:#f8f9fa;
+    padding:22px;
+    border-radius:12px;
+    margin:18px 0;
+}
+
+.status-text {
+    color:#d35400;
+    font-weight:bold;
+    font-size:19px;
+}
 </style>
 </head>
+
 <body>
+
 <div class="tracking-container">
-    <h1><i class="fas fa-truck"></i> Miles Logistics - Package Tracker</h1>
+<h1><i class="fas fa-truck"></i> Miles Logistics - Package Tracker</h1>
 
-    <div class="tracking-input">
-        <input type="text" id="tracking-id" placeholder="Enter tracking number" />
-        <button onclick="trackOrder()">Track Package</button>
+<div class="tracking-input">
+    <input type="text" id="tracking-id" placeholder="Enter tracking number" />
+    <button onclick="trackOrder()">Track Package</button>
+</div>
+
+<div class="tracking-status" id="tracking-status" style="display:none;">
+    <h2 style="text-align:center;">Tracking Details</h2>
+
+    <div class="tracking-info">
+        <p><strong>Tracking Number:</strong> <span id="order-id"></span></p>
+        <p><strong>Current Status:</strong> <span id="order-status" class="status-text"></span></p>
+        <p><strong>Estimated Delivery:</strong> <span id="delivery-date" style="color:#27ae60;"></span></p>
     </div>
 
-    <div class="tracking-status" id="tracking-status" style="display:none;">
-        <h2 style="text-align:center; color:#2c3e50;">Tracking Details</h2>
-
-        <div class="tracking-info">
-            <p><strong>Tracking Number:</strong> <span id="order-id" style="font-family:monospace; font-size:22px; color:#e74c3c;"></span></p>
-            <p><strong>Current Status:</strong> <span id="order-status" class="status-text"></span></p>
-            <p><strong>Estimated Delivery:</strong> <span id="delivery-date" style="font-weight:bold; color:#27ae60;"></span></p>
+    <div class="progress-container">
+        <div class="progress-step" id="step-1">
+            <div class="circle"><i class="fas fa-box"></i></div>
+            <span>Order Placed</span>
         </div>
-
-        <div class="progress-container">
-            <div class="progress-step" id="step-1">
-                <div class="circle"><i class="fas fa-box"></i></div>
-                <span>Order Placed</span>
-            </div>
-            <div class="progress-step" id="step-2">
-                <div class="circle"><i class="fas fa-shipping-fast"></i></div>
-                <span>Shipped</span>
-            </div>
-            <div class="progress-step" id="step-3">
-                <div class="circle"><i class="fas fa-plane"></i></div>
-                <span>On Hold (Customs)</span>
-            </div>
-            <div class="progress-step" id="step-4">
-                <div class="circle"><i class="fas fa-truck"></i></div>
-                <span>Out for Delivery</span>
-            </div>
-            <div class="progress-step" id="step-5">
-                <div class="circle"><i class="fas fa-check-circle"></i></div>
-                <span>Delivered</span>
-            </div>
+        <div class="progress-step" id="step-2">
+            <div class="circle"><i class="fas fa-shipping-fast"></i></div>
+            <span>Shipped</span>
         </div>
-
-        <div class="tracking-details">
-            <h3>Recipient Information</h3>
-            <p><strong>Recipient:</strong> <span id="recipient"></span></p>
-            <p><strong>Delivery Address:</strong> <span id="shipping-address"></span></p>
-            <p><strong>Courier:</strong> MILES LOGISTICS | Weight: 2.8kg | Type: International Priority</p>
+        <div class="progress-step" id="step-3">
+            <div class="circle"><i class="fas fa-plane"></i></div>
+            <span>On Hold (Bulgaria)</span>
         </div>
-
-        <div style="text-align:center; margin:20px 0; padding:12px; background:#fff3cd; border-radius:10px; color:#856404;">
-            <strong>Route:</strong> Syria → Turkey (In Transit) → Bulgaria → Philippines
+        <div class="progress-step" id="step-4">
+            <div class="circle"><i class="fas fa-truck"></i></div>
+            <span>Out for Delivery</span>
         </div>
-
-        <div id="map"></div>
+        <div class="progress-step" id="step-5">
+            <div class="circle"><i class="fas fa-check-circle"></i></div>
+            <span>Delivered</span>
+        </div>
     </div>
+
+    <div class="tracking-details">
+        <h3>Recipient Information</h3>
+        <p><strong>Recipient:</strong> <span id="recipient"></span></p>
+        <p><strong>Delivery Address:</strong> <span id="shipping-address"></span></p>
+        <p><strong>Courier:</strong> MILES LOGISTICS | Weight: 2.8kg | Type: International Priority</p>
+    </div>
+
+    <div style="text-align:center; margin:20px 0; padding:12px; background:#fff3cd; border-radius:10px;">
+        <strong>Route:</strong> Syria → Turkey → Bulgaria (On Hold) → Philippines
+    </div>
+
+    <div id="map"></div>
+</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
 const routePath = [
-    [33.5138, 36.2765],   // Syria
-    [36.8969, 30.7133],   // Turkey
-    [42.6977, 23.3219],   // Bulgaria
-    [7.1907, 125.4553]    // Philippines (Davao)
+    [33.5138, 36.2765], // Syria
+    [36.8969, 30.7133], // Turkey
+    [42.6977, 23.3219], // Bulgaria
+    [7.1907, 125.4553]  // Philippines
 ];
 
 const trackingDatabase = {
     "EA147185623US": {
-        status: "IN TRANSIT AT TURKEY BORDER",
+        status: "ON HOLD AT SOFIA INTERNATIONAL AIRPORT - BULGARIAN CUSTOMS WAREHOUSE",
         deliveryDate: "17/04/2025",
         recipient: "Leine Openga Bernardo",
-        address: "Ph 8-A Block 10 Lot 50 Bluegill St. Deca Homes Resort Residences, Brgy. Tacunan, Tugbok District 8000 Davao City, Davao Del Sur, Philippines",
+        address: "Ph 8-A Block 10 Lot 50 Bluegill St. Deca Homes Resort Residences, Davao City, Philippines",
         lat: 7.1907,
         lng: 125.4553
     }
@@ -154,15 +159,13 @@ const trackingDatabase = {
 let map, routeLine;
 
 function trackOrder() {
-    const input = document.getElementById('tracking-id');
-    const id = input.value.trim().toUpperCase();
+    const id = document.getElementById('tracking-id').value.trim().toUpperCase();
     const data = trackingDatabase[id];
 
     if (map) map.remove();
 
     if (!data) {
         alert("Invalid tracking number! Try: EA147185623US");
-        document.getElementById('tracking-status').style.display = 'none';
         return;
     }
 
@@ -174,53 +177,38 @@ function trackOrder() {
     document.getElementById('recipient').innerText = data.recipient;
     document.getElementById('shipping-address').innerText = data.address;
 
-    // Progress (In Transit)
+    // Progress (Step 3 active)
     document.querySelectorAll('.progress-step').forEach(s => s.classList.remove('active'));
-    for (let i = 1; i <= 2; i++) {
+    for (let i = 1; i <= 3; i++) {
         document.getElementById('step-' + i).classList.add('active');
     }
 
-    map = L.map('map').setView([20, 60], 3);
+    map = L.map('map').setView([25, 60], 3);
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
+        attribution:'© OpenStreetMap'
     }).addTo(map);
 
     routeLine = L.polyline(routePath, {
-        color: '#e74c3c',
-        weight: 6,
-        opacity: 0.9,
-        dashArray: '20,15'
+        color:'#e74c3c',
+        weight:6,
+        dashArray:'20,15'
     }).addTo(map);
 
-    let offset = 0;
-    setInterval(() => {
-        offset -= 2;
-        routeLine.setStyle({ dashOffset: offset });
-    }, 60);
-
     L.marker(routePath[0]).addTo(map).bindPopup("Origin: Syria");
-    L.marker(routePath[1]).addTo(map).bindPopup("Transit: Turkey Border");
-    L.marker(routePath[2]).addTo(map).bindPopup("Transit: Bulgaria");
+    L.marker(routePath[1]).addTo(map).bindPopup("Transit: Turkey");
+    L.marker(routePath[2]).addTo(map).bindPopup("On Hold: Bulgaria");
 
-    L.marker([data.lat, data.lng], {
-        icon: L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-            iconSize: [25,41],
-            iconAnchor: [12,41]
-        })
-    }).addTo(map)
-      .bindPopup(`<b>${data.recipient}</b><br>${data.address}<br><br><strong>Status:</strong> ${data.status}`)
-      .openPopup();
+    L.marker([data.lat, data.lng]).addTo(map)
+        .bindPopup(`<b>${data.recipient}</b><br>${data.address}<br><br><strong>${data.status}</strong>`);
 
     map.fitBounds(routeLine.getBounds().pad(0.4));
 }
 
-document.getElementById('tracking-id').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        trackOrder();
-    }
+document.getElementById('tracking-id').addEventListener('keypress', function(e){
+    if(e.key === 'Enter') trackOrder();
 });
 </script>
+
 </body>
 </html>
